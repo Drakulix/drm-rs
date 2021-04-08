@@ -510,7 +510,7 @@ pub fn set_connector_property(
 }
 
 /// Get the value of a property blob
-pub fn get_property_blob(fd: RawFd, id: u32, data: Option<&mut &mut [u64]>) -> Result<drm_mode_get_blob, Error> {
+pub fn get_property_blob(fd: RawFd, id: u32, mut data: Option<&mut [u8]>) -> Result<drm_mode_get_blob, Error> {
     let mut blob = drm_mode_get_blob {
         blob_id: id,
         length: map_len!(&data),
@@ -521,13 +521,13 @@ pub fn get_property_blob(fd: RawFd, id: u32, data: Option<&mut &mut [u64]>) -> R
         ioctl::mode::get_blob(fd, &mut blob)?;
     }
 
-    map_shrink!(data, blob.length as usize);
+    map_shrink!(&mut data, blob.length as usize);
 
     Ok(blob)
 }
 
 /// Create a property blob
-pub fn create_property_blob(fd: RawFd, data: &mut [u64]) -> Result<drm_mode_create_blob, Error> {
+pub fn create_property_blob(fd: RawFd, data: &mut [u8]) -> Result<drm_mode_create_blob, Error> {
     let mut blob = drm_mode_create_blob {
         length: data.len() as _,
         data: data.as_ptr() as _,

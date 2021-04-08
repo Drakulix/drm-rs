@@ -464,12 +464,12 @@ pub trait Device: super::Device {
         Ok(())
     }
 
-    fn create_property_blob(&self, mode: Mode) -> Result<property::Value<'static>, SystemError> {
-        let mut raw_mode: ffi::drm_mode_modeinfo = mode.into();
+    /// Create a property blob value from a given data blob
+    fn create_property_blob<T>(&self, data: &T) -> Result<property::Value<'static>, SystemError> {
         let data = unsafe {
             std::slice::from_raw_parts_mut(
-                mem::transmute(&mut raw_mode as *mut ffi::drm_mode_modeinfo),
-                mem::size_of::<ffi::drm_mode_modeinfo>()
+                data as *const _ as *mut u8,
+                mem::size_of::<T>()
             )
         };
         let blob = ffi::mode::create_property_blob(
@@ -480,6 +480,15 @@ pub trait Device: super::Device {
         Ok(property::Value::Blob(blob.blob_id.into()))
     }
 
+    /// Get a property blob's data
+    fn get_property_blob(&self, blob: u64) -> Result<Vec<u8>, SystemError> {
+        let len = ffi::mode::get_property_blob(self.as_raw_fd(), blob as u32, None)?.length;
+        let mut data = vec![0u8; len as usize];
+        let _ = ffi::mode::get_property_blob(self.as_raw_fd(), blob as u32, Some(&mut data))?;
+        Ok(data)
+    }
+
+    /// Destroy a given property blob value
     fn destroy_property_blob(&self, blob: u64) -> Result<(), SystemError> {
         ffi::mode::destroy_property_blob(self.as_raw_fd(), blob as u32)?;
 

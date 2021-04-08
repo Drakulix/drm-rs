@@ -110,7 +110,7 @@ pub fn main() {
         find_prop_id(&card, con.handle(), "CRTC_ID").expect("Could not get CRTC_ID"),
         property::Value::CRTC(Some(crtc.handle()))
     );
-    let blob = card.create_property_blob(mode).expect("Failed to create blob");
+    let blob = card.create_property_blob(&mode).expect("Failed to create blob");
     atomic_req.add_property(
         crtc.handle(),
         find_prop_id(&card, crtc.handle(), "MODE_ID").expect("Could not get MODE_ID"),
